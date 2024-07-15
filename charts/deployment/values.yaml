@@ -1,0 +1,12 @@
+baseName: sample-app
+replicaCount: 1  # Default to 1
+replicas: 2
+resources:
+  limits:
+    cpu: '2.0'
+    memory: 16Gi
+  requests:
+    cpu: '2.0'
+    memory: 16Gi
+enclosureSpread: false  # Set to false to disable
+nodeSpread: false  # Set to false to disable

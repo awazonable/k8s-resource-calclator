@@ -1,0 +1,57 @@
+{{- range $i := until (int $.Values.replicaCount) }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "deployment.name" (dict "Values" $.Values "Index" $i) }}
+  labels:
+    app: {{ include "deployment.name" (dict "Values" $.Values "Index" $i) }}
+    managed-by: helm
+    helm-release: {{ $.Release.Name }}
+spec:
+  replicas: {{ $.Values.replicas }}
+  selector:
+    matchLabels:
+      app: {{ include "deployment.name" (dict "Values" $.Values "Index" $i) }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "deployment.name" (dict "Values" $.Values "Index" $i) }}
+        managed-by: helm
+        helm-release: {{ $.Release.Name }}
+    spec:
+      containers:
+      - image: your-docker-image
+        name: {{ include "deployment.name" (dict "Values" $.Values "Index" $i) }}
+        resources:
+          limits:
+            cpu: {{ $.Values.resources.limits.cpu }}
+            memory: {{ $.Values.resources.limits.memory }}
+          requests:
+            cpu: {{ $.Values.resources.requests.cpu }}
+            memory: {{ $.Values.resources.requests.memory }}
+      nodeSelector:
+        type: kwok
+      tolerations:
+      - effect: NoSchedule
+        key: kwok.x-k8s.io/node
+        operator: Equal
+        value: fake
+      topologySpreadConstraints:
+      {{- if $.Values.enclosureSpread }}
+      - maxSkew: 1
+        topologyKey: "helm-release"
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app: {{ include "deployment.name" (dict "Values" $.Values "Index" $i) }}
+      {{- end }}
+      {{- if $.Values.nodeSpread }}
+      - maxSkew: 1
+        topologyKey: "kubernetes.io/hostname"
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app: {{ include "deployment.name" (dict "Values" $.Values "Index" $i) }}
+      {{- end }}
+---
+{{- end }}

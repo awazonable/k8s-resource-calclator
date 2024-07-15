@@ -1,0 +1,4 @@
+apiVersion: v2
+name: multi-deployment
+description: A Helm chart for deploying multiple instances of a deployment on Kubernetes
+version: 0.1.0
