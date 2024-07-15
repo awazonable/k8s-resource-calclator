@@ -1,0 +1,10 @@
+replicas: 8
+# labels:
+#   app: app-name
+allocatable:
+  cpu: "7.5"
+  memory: "30Gi"
+capacity:
+  cpu: "8"
+  memory: "32Gi"
+reload: true

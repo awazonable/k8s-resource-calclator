@@ -1,0 +1,65 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: label-and-drain-nodes
+  annotations:
+    "helm.sh/hook": pre-upgrade,pre-rollback
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    spec:
+      serviceAccountName: {{ .Release.Name }}-admin-sa
+      containers:
+      - name: kubectl
+        image: bitnami/kubectl:latest
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          {{- if $.Values.reload | default false }}
+          # リソースを変更する場合、全てのノードにラベルを付ける
+          for node in $(kubectl get nodes -l managed-by=helm,helm-release={{ .Release.Name }} --no-headers -o custom-columns=NAME:.metadata.name); do
+            kubectl label node $node scheduled-for-deletion=true --overwrite
+          done
+          # ラベルが付いているノードをドレインし、削除
+          kubectl get nodes -l managed-by=helm,helm-release={{ .Release.Name }},scheduled-for-deletion=true --no-headers -o custom-columns=NAME:.metadata.name | xargs -I {} sh -c 'kubectl drain {} --ignore-daemonsets --delete-emptydir-data --force --grace-period=0 && kubectl delete node {}'
+          {{- else }}
+          # replicasが減少する場合、余分なノードにラベルを付ける
+          current_count=$(kubectl get nodes -l managed-by=helm,helm-release={{ .Release.Name }} --no-headers | wc -l)
+          new_count={{ $.Values.replicas | default 3 }}
+          if [ $current_count -gt $new_count ]; then
+            for i in $(seq $new_count $((current_count - 1))); do
+              node_name=$(printf "{{ .Release.Name }}-%03d" $i)
+              kubectl label node $node_name scheduled-for-deletion=true --overwrite
+            done
+          fi
+          # ラベルが付いているノードをドレイン
+          kubectl get nodes -l managed-by=helm,helm-release={{ .Release.Name }},scheduled-for-deletion=true --no-headers -o custom-columns=NAME:.metadata.name | xargs -I {} kubectl drain {} --ignore-daemonsets --delete-emptydir-data --force --grace-period=0
+          {{- end }}
+      restartPolicy: Never
+  backoffLimit: 4
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: label-and-drain-nodes
+  annotations:
+    "helm.sh/hook": pre-delete
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    spec:
+      serviceAccountName: {{ .Release.Name }}-admin-sa
+      containers:
+      - name: kubectl
+        image: bitnami/kubectl:latest
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          # 全てのノードにラベルを付ける
+          for node in $(kubectl get nodes -l managed-by=helm,helm-release={{ .Release.Name }} --no-headers -o custom-columns=NAME:.metadata.name); do
+            kubectl label node $node scheduled-for-deletion=true --overwrite
+          done
+          # ラベルが付いているノードをドレイン
+          kubectl get nodes -l managed-by=helm,helm-release={{ .Release.Name }},scheduled-for-deletion=true --no-headers -o custom-columns=NAME:.metadata.name | xargs -I {} kubectl drain {} --ignore-daemonsets --delete-emptydir-data --force --grace-period=0
+      restartPolicy: Never
+  backoffLimit: 4

@@ -1,0 +1,12 @@
+baseName: db
+replicaCount: 10  # Default to 1
+replicas: 3
+resources:
+  limits:
+    cpu: '2.0'
+    memory: 32Gi
+  requests:
+    cpu: '2.0'
+    memory: 32Gi
+enclosureSpread: false  # Set to false to disable
+nodeSpread: true  # Set to false to disable

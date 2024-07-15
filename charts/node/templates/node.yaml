@@ -1,0 +1,53 @@
+{{- $replicas := (.Values.replicas | default 3 | int) }}
+{{- range $i := until $replicas }}
+apiVersion: v1
+kind: Node
+metadata:
+  annotations:
+    node.alpha.kubernetes.io/ttl: "0"
+    kwok.x-k8s.io/node: fake
+  labels:
+    beta.kubernetes.io/arch: amd64
+    beta.kubernetes.io/os: linux
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: {{ .Release.Name }}-{{ printf "%03d" $i }}
+    kubernetes.io/os: linux
+    kubernetes.io/role: agent
+    node-role.kubernetes.io/agent: ""
+    type: kwok
+    managed-by: helm
+    helm-release: {{ $.Release.Name }}
+    {{- if $.Values.labels }}
+    {{- range $key, $value := $.Values.labels }}
+    {{ $key }}: {{ $value }}
+    {{- end }}
+    {{- end }}
+  name: {{ .Release.Name }}-{{ printf "%03d" $i }}
+spec:
+  taints:
+    - effect: NoSchedule
+      key: kwok.x-k8s.io/node
+      value: fake
+status:
+  allocatable:
+    cpu: {{ if and $.Values.allocatable $.Values.allocatable.cpu }}{{ $.Values.allocatable.cpu | quote }}{{ else }}"4"{{ end }}
+    memory: {{ if and $.Values.allocatable $.Values.allocatable.memory }}{{ $.Values.allocatable.memory | quote }}{{ else }}"16Gi"{{ end }}
+    pods: {{ if and $.Values.allocatable $.Values.allocatable.pods }}{{ $.Values.allocatable.pods | quote }}{{ else }}"100"{{ end }}
+  capacity:
+    cpu: {{ if and $.Values.capacity $.Values.capacity.cpu }}{{ $.Values.capacity.cpu | quote }}{{ else }}"8"{{ end }}
+    memory: {{ if and $.Values.capacity $.Values.capacity.memory }}{{ $.Values.capacity.memory | quote }}{{ else }}"32Gi"{{ end }}
+    pods: {{ if and $.Values.capacity $.Values.capacity.pods }}{{ $.Values.capacity.pods | quote }}{{ else }}"110"{{ end }}
+  nodeInfo:
+    architecture: amd64
+    bootID: ""
+    containerRuntimeVersion: ""
+    kernelVersion: ""
+    kubeProxyVersion: fake
+    kubeletVersion: fake
+    machineID: ""
+    operatingSystem: linux
+    osImage: ""
+    systemUUID: ""
+  phase: Running
+---
+{{- end }}
