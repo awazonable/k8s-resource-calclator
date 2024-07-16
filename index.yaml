@@ -1,3 +1,22 @@
 apiVersion: v1
-entries: {}
-generated: "2024-07-16T19:50:47.6749793+09:00"
+entries:
+  multi-deployment:
+  - apiVersion: v2
+    created: "2024-07-16T19:57:33.0415358+09:00"
+    description: A Helm chart for deploying multiple instances of a deployment on
+      Kubernetes
+    digest: 785e30818bd779d1bd9d404980619bfff9524dad12bf223a3613b4f25975075f
+    name: multi-deployment
+    urls:
+    - https://awazonable.github.io/k8s-resource-calculator/multi-deployment-0.1.0.tgz
+    version: 0.1.0
+  node-chart:
+  - apiVersion: v2
+    created: "2024-07-16T19:57:33.0420647+09:00"
+    description: A Helm chart for Kubernetes Node
+    digest: 9f28fdcae8fab6772694007ee5ac257032c984a730ac34ee27ef0deeb7908c38
+    name: node-chart
+    urls:
+    - https://awazonable.github.io/k8s-resource-calculator/node-chart-0.1.0.tgz
+    version: 0.1.0
+generated: "2024-07-16T19:57:33.0387837+09:00"
